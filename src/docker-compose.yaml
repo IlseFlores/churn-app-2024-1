@@ -1,0 +1,10 @@
+version: "3.8"
+services:
+  churn-app:
+    build: ./api
+    ports:
+      - "5050:5050"
+  frontend-churn:
+    build: ./frontend
+    ports:
+      - "8501:8501"

@@ -5,6 +5,7 @@ import uvicorn
 import pickle
 from pydantic import BaseModel
 import sklearn
+import pandas as pd
 
 
 class FeaturesModel(BaseModel):
@@ -72,20 +73,29 @@ def get_api_key(api_key_query: str = Security(api_key_query)):
         )
 @app.on_event("startup")
 def load_model():
-    global model1#para que desde cualquier parte de la api podamos llamar a la variable.
-    with open("../../model/model.pickle", "rb") as openfile:
-        model1 = pickle.load(openfile)
+    global logged_model#para que desde cualquier parte de la api podamos llamar a la variable.
+    import mlflow
+    mlflow.set_tracking_uri('https://dagshub.com/IlseFlores/churn-app-2024-1.mlflow')
+    logged_model = 'runs:/363cc8938f03422f9541849aaf9f2f8c/ada_boost_classifier'
+    logged_model = mlflow.pyfunc.load_model(logged_model)
+
+
 
 @app.get("/api/v1/classify")
 def classify(features_model:FeaturesModel,api_key: APIKey = Depends(get_api_key)):
 
-    features = [val for val in features_model.__dict__.values()][:-1]
-    prediction = model1.predict([features])#asi es el formato e la prediccción
-    label_dict ={
+   features = [val for val in features_model.__dict__.values()][:-1]
+   #features = features_model.__dict__
+    # Predict on a Pandas DataFrame.
+
+   prediction =logged_model.predict([features])
+
+
+   label_dict ={
         0: "Not churn",
         1: "Churn"
     }
-    return {'prediction': label_dict[int(prediction[0])]}
+   return {'prediction': label_dict[int(prediction[0])]}
 
 
 
