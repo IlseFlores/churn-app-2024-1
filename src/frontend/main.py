@@ -58,7 +58,7 @@ PaymentMethod_Electronic_check = st.sidebar.selectbox("payment method electronic
 PaymentMethod_Mailed_check = st.sidebar.selectbox("payment method mailed check", ["true", "false"])
 
 dict_input = {
-    "senior_citizen": SeniorCitizen,
+    "SeniorCitizen": SeniorCitizen,
     "tenure": tenure,
     "MonthlyCharges": MonthlyCharges,
     "TotalCharges": TotalCharges,
@@ -72,10 +72,9 @@ dict_input = {
     "PhoneService_Yes": PhoneService_Yes,
     "MultipleLines_No": MultipleLines_No,
     "MultipleLines_No_phone": MultipleLines_No_phone,
-    "service": service,
     "MultipleLines_Yes": MultipleLines_Yes,
     "InternetService_DSL": InternetService_DSL,
-    "InternetService_Fiber_optics": InternetService_Fiber_optics,
+    "InternetService_Fiber_optic": InternetService_Fiber_optics,
     "InternetService_No": InternetService_No,
     "OnlineSecurity_No": OnlineSecurity_No,
     "OnlineSecurity_No_internet_service": OnlineSecurity_No_internet_service,
@@ -120,6 +119,6 @@ if st.button("predict"):
     }
 
     response = requests.request("GET", url, headers=headers, data=payload)
-    st.write("Prediction: ", response.json()["prediction"])
+    st.write("Prediction: ", response.json())
 
     print(response.text)

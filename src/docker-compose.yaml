@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   churn-app:
-    build: ./api
+    build: ./backend
     ports:
       - "5050:5050"
   frontend-churn:

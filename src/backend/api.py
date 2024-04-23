@@ -1,11 +1,9 @@
-from fastapi import Security, Depends, FastAPI, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Security
 from fastapi.security.api_key import APIKeyQuery, APIKey
 from starlette.status import HTTP_403_FORBIDDEN
 import uvicorn
 import pickle
 from pydantic import BaseModel
-import sklearn
-import pandas as pd
 
 
 class FeaturesModel(BaseModel):
@@ -23,7 +21,6 @@ class FeaturesModel(BaseModel):
     PhoneService_Yes: bool
     MultipleLines_No: bool
     MultipleLines_No_phone: bool
-    service: bool
     MultipleLines_Yes: bool
     InternetService_DSL: bool
     InternetService_Fiber_optic: bool
@@ -56,53 +53,47 @@ class FeaturesModel(BaseModel):
     PaymentMethod_Electronic_check: bool
     PaymentMethod_Mailed_check: bool
 
+app= FastAPI()
 
-app = FastAPI()
-API_KEY = "ChurnModel-2024$*"
-API_KEY_NAME = "api_key"
+API_KEY= "ChurnModel-2024$*"
+API_KEY_NAME= "api_key"
 
-api_key_query = APIKeyQuery(name=API_KEY_NAME, auto_error=False)
+api_key_query = APIKeyQuery(name =API_KEY_NAME, auto_error=False)
+
 
 def get_api_key(api_key_query: str = Security(api_key_query)):
-
     if api_key_query == API_KEY:
         return api_key_query
     else:
         raise HTTPException(
             status_code=HTTP_403_FORBIDDEN, detail="Could not validate credentials"
         )
+
 @app.on_event("startup")
 def load_model():
-    global logged_model#para que desde cualquier parte de la api podamos llamar a la variable.
+
+    global logged_model
     import mlflow
-    mlflow.set_tracking_uri('https://dagshub.com/IlseFlores/churn-app-2024-1.mlflow')
-    logged_model = 'runs:/363cc8938f03422f9541849aaf9f2f8c/ada_boost_classifier'
+    mlflow.set_tracking_uri('https://dagshub.com/SantiagoAguirre2002/churn-app-2024-1.mlflow')
+    logged_model = 'runs:/564ea0ecbc7b4a428244b2f27a2f61b0/logistic_classifier'
+
+    # Load model as a PyFuncModel.
     logged_model = mlflow.pyfunc.load_model(logged_model)
 
-
-
 @app.get("/api/v1/classify")
-def classify(features_model:FeaturesModel,api_key: APIKey = Depends(get_api_key)):
+def classify(features_model: FeaturesModel, api_key : APIKey=Depends(get_api_key)):
 
-   features = [val for val in features_model.__dict__.values()][:-1]
-   #features = features_model.__dict__
-    # Predict on a Pandas DataFrame.
-
-   prediction =logged_model.predict([features])
+    features= [val for val in features_model.__dict__.values()]
+    prediction = logged_model.predict([features])
 
 
-   label_dict ={
+    label_dict= {
         0: "Not churn",
         1: "Churn"
     }
-   return {'prediction': label_dict[int(prediction[0])]}
 
-
-
-@app.get("/home")
-def home(api_key: APIKey = Depends(get_api_key)):
-    return {"message": "Hello World"}
+    return {'prediction': label_dict[int(prediction[0])]}
 
 
 if __name__ == "__main__":
-    uvicorn.run("api:app", host="0.0.0.0", port=5050, log_level="info",reload = True)
+    uvicorn.run('api:app', host='0.0.0.0', port=5050, log_level='info', reload=True)
